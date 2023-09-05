@@ -200,6 +200,57 @@ def cli_show(
     render_output(ret, fmt=fmt)
 
 
+@cli_app.command("fw_show")
+def cli_fw_show(
+    ctx: typer.Context,
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.yaml.value,
+        "--format",
+        "-F",
+        help="Output format",
+    ),
+    limit: str = typer.Option(
+        None,
+        "--limit",
+        "-L",
+        help="List of hosts to select",
+    ),
+    ):
+    """Show firmware info"""
+
+    app = ctx.obj['myapp']
+    ret = app.cmd_fw_show(limit=limit)
+    render_output(ret, fmt=fmt)
+
+@cli_app.command("fw_download")
+def cli_fw_download(
+    ctx: typer.Context,
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.yaml.value,
+        "--format",
+        "-F",
+        help="Output format",
+    ),
+    limit: str = typer.Option(
+        None,
+        "--limit",
+        "-L",
+        help="List of hosts to select",
+    ),
+    release: str = typer.Option(
+        None,
+        "--release",
+        "-r",
+        help="Openwrt release to select",
+    ),
+    ):
+    """Show firmware info"""
+
+    app = ctx.obj['myapp']
+    ret = app.cmd_fw_download(limit=limit, version=release)
+    render_output(ret, fmt=fmt)
+
+
 
 @cli_app.command("hosts")
 def cli_hosts(

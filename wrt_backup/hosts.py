@@ -19,16 +19,29 @@ logger = logging.getLogger(__name__)
 class Host:
     "This is a router class"
 
-    def __init__(self, name, host=None, port=None, user=None, path='.', backup_all=False, backup_state=False):
-
+    def __init__(self, app, name,
+                 host=None, port=None, user=None, path='.', 
+                 backup_all=False, backup_state=False,
+                 board_target = None, board_device = None, openwrt_version=None,
+                 ):
+        
+        self.app = app
+        self.date_now = datetime.datetime.now()
         self.prepare(name, host=host, port=port, user=user)
         self.path = os.path.join(path, name)
+
+        # Backup options
         self.backup_all = backup_all
         self.backup_state = backup_state
-        self.date_now = datetime.datetime.now()
+
+        # Firmware options
+        self.board_target = board_target
+        self.board_device  =  board_device
+        self.openwrt_version = openwrt_version
 
 
     def prepare(self, name, host=None, port=None, user=None):
+        "Prepare host connection"
 
         if not host:
             assert False, f"Missing IP for host {name}"
@@ -171,5 +184,60 @@ class Host:
         if structured:
             return uci2dict(out, native_type=native_type)
         return str(out)
+
+
+    def fw_show(self):
+
+
+        # self.board_target = board_target
+        # self.board_device  =  board_device
+        # self.openwrt_version = openwrt_version
+
+        dl_url_install = f"https://downloads.openwrt.org/releases/{self.openwrt_version}/targets/{self.board_target}/openwrt-{self.openwrt_version}-{self.board_device}-squashfs-factory.bin"
+        dl_url_upgrade = f"https://downloads.openwrt.org/releases/{self.openwrt_version}/targets/{self.board_target}/openwrt-{self.openwrt_version}-{self.board_device}-squashfs-sysupgrade.bin"
+
+        print (dl_url_upgrade, self.app.fw_path)
+
+
+    def fw_download(self, upgrade=True, version=None):
+
+        version = version or self.openwrt_version
+
+        dl_prefix= f"https://downloads.openwrt.org/releases/{version}/targets/{self.board_target}/"
+
+        dl_name= f"openwrt-{version}-{self.board_device}-squashfs-factory.bin"
+        if upgrade:
+            dl_name= f"openwrt-{version}-{self.board_device}-squashfs-sysupgrade.bin"
+
+        dl_url = f"{dl_prefix}{dl_name}"
+
+
+        tmp_dest = os.path.join(self.path, "firmwares")
+        if not os.path.isdir(tmp_dest):
+            os.makedirs(tmp_dest)
+
+        tmp_dest = os.path.join(tmp_dest, dl_name)
+        dl = Downloader()
+        dl.download(dl_url, tmp_dest)
+        logger.info("Firmware downloaded in %s", tmp_dest)
+        return tmp_dest
+
+
+
+
+
+class Downloader():
+
+    def download(self, url, dest=None):
+
+        opts = [url]
+        if dest:
+            if os.path.isdir(dest):
+                opts.extend(['-P', dest])
+            else:
+                opts.extend(['-O', dest])
+
+        logger.debug("Downloading url %s", url)
+        sh.wget(*opts)
 
 

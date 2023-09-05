@@ -65,6 +65,7 @@ class MyApp:
         # Save config
         self.config_dir = os.path.dirname(config_file)
         self.config_file = config_file
+        self.fw_path = os.path.join(self.config_dir, "firmwares")
 
     def build_host_cfg(self):
         "Build host configuration"
@@ -72,7 +73,7 @@ class MyApp:
         self._hosts = []
         self._inventory = self.cfg_data.get('inventory', {})
         for name, conf in self._inventory.items():
-            self._hosts.append(Host(name, path=self.config_dir, **conf))
+            self._hosts.append(Host(self, name, path=self.config_dir, **conf))
 
 
     # Cli commands
@@ -94,6 +95,28 @@ class MyApp:
             if limit and host._name not in limit:
                 continue
             ret[host._name] = host.uci_show(native_type=native_type, structured=structured)
+
+        return ret
+
+    def cmd_fw_download(self, limit=None, upgrade=True, version=None):
+        "Download firmware configuration"
+
+        ret = {}
+        for host in self._hosts:
+            if limit and host._name not in limit:
+                continue
+            ret[host._name] = host.fw_download(upgrade=upgrade, version=version)
+        return ret
+
+
+    def cmd_fw_show(self, limit=None):
+        "Show firmware configuration"
+
+        ret = {}
+        for host in self._hosts:
+            if limit and host._name not in limit:
+                continue
+            ret[host._name] = host.fw_show()
 
         return ret
 
