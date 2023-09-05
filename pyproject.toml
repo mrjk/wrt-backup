@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "wrt-backup"
+version = "0.1.0"
+description = "Simple tool to manage openwrt configurations"
+authors = ["mrjk"]
+license = "GPLv3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sh = "^2.0.6"
+typer = "^0.9.0"
+ruamel-yaml = "^0.17.32"
+pyxdg = "^0.28"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+wrt-backup = 'wrt_backup.cli:app'
