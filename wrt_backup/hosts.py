@@ -67,6 +67,10 @@ class Host:
                 #"ps": "ps w",
                 #"mem": "free -h",
 
+                "board_cfg": "cat /etc/board.json",
+
+                "release": "cat /etc/os-release",
+                #"release": "cat /etc/openwrt_release",
                 "df": "df -h",
                 "ip_addresses": "ip a",
                 "ip_route": "ip route",
