@@ -80,7 +80,7 @@ def render_output(ret, fmt=OutputFormat.yaml):
 # Define Typer application
 # -------------------
 cli_app = typer.Typer(
-    help="MyApp, that does something",
+    help="wrt-backup, a tool to manage OpenWrt devices",
     invoke_without_command=True,
     no_args_is_help=True,
 )
@@ -91,7 +91,9 @@ cli_app = typer.Typer(
 @cli_app.callback()
 def main(
     ctx: typer.Context,
-    verbose: int = typer.Option(0, "--verbose", "-v", count=True, min=0, max=2),
+    verbose: int = typer.Option(0, "--verbose", "-v", count=True, min=0, max=2,
+        help="Increase verbosity",
+        ),
     working_dir: Optional[str] = typer.Option(
         # ".",  # For relative paths
         #os.getcwd(),  # For abolute Paths
@@ -244,7 +246,7 @@ def cli_fw_download(
         help="Openwrt release to select",
     ),
     ):
-    """Show firmware info"""
+    """Download firmware"""
 
     app = ctx.obj['myapp']
     ret = app.cmd_fw_download(limit=limit, version=release)
