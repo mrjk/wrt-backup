@@ -48,15 +48,63 @@ class Host:
 
         self._host = host
         self._name = name
-        self._user = user or 'root'
-        self._port = port or '22'
+        self._user = user
+        self._port = port
 
         ssh_args = [
-                "-l", self._user,
-                "-p", self._port,
                 self._host,
         ]
-        self.ssh_conn = sh.ssh.bake(*ssh_args)
+        if self._user:
+            ssh_args.extend(["-l", self._user])
+        if self._port:
+            ssh_args.extend(["-p", self._port])
+
+        env = os.environ.copy()
+        env.update({
+                "WRT_BACKUP_DIR": self.app.config_dir,
+                "WRT_BACKUP_SSH_LOCAL": os.path.join(self.app.config_dir, 'ssh_local.d'),
+                })
+
+        ssh_config = os.path.join(self.app.config_dir, 'ssh_config')
+        if os.path.isfile(ssh_config):
+            logger.debug("Enable local ssh config: %s" , ssh_config)
+            ssh_args.extend(['-F', ssh_config])
+
+        self.ssh_conn = sh.ssh.bake(*ssh_args, _env=env)
+
+    def cmd_show_facts(self):
+
+        ret = {}
+
+        # Fetch hostname
+        logger.debug("Get host fact")
+        cmd = "cat /proc/sys/kernel/hostname"
+        out = self.ssh_conn(cmd)
+        ret["hostname"] = str(out).strip()
+
+        # Fetch hardware info
+        logger.debug("Get board fact")
+        cmd = "cat /etc/board.json"
+        out = self.ssh_conn(cmd)
+        payload = json.loads(out)
+        if 'switch' in payload:
+            del payload['switch']
+        ret["board"] = payload
+
+        # Fetch OS Info
+        logger.debug("Get OS facts")
+        cmd = "cat /etc/os-release"
+        lines = self.ssh_conn(cmd)
+        out = 'UNKNOWN'
+        for line in lines.split('\n'):
+            if line.startswith('VERSION='):
+                parts = line.split('=', 1)
+                out = parts[1]
+                out = out.strip('"') # Strip quotes
+
+        ret["version"] = out
+
+        return ret
 
     def cmd_backup_states(self, fmt="md"):
         "Get command outputs"
@@ -157,7 +205,7 @@ class Host:
         backup_name = os.path.join(self.path, f"backup-{self._name}.tar.gz")
 
         # Prepare backup command
-        logger.info("Start device backup")
+        logger.info("Start device backup ...")
         bckp_cmd = "sysupgrade -b - -k"
         if self.backup_all:
             bckp_cmd = bckp_cmd + " -o"
@@ -177,7 +225,7 @@ class Host:
             os.makedirs(tmp_dest)
         tmp_dest = os.path.join(tmp_dest, file_dest)
         sh.mv(backup_name, tmp_dest)
-        logger.debug("Save backup archive in: %s", tmp_dest)
+        logger.info("Save backup archive in: %s", tmp_dest)
 
 
     def uci_show(self, structured=True, native_type=False):

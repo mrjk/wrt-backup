@@ -179,7 +179,7 @@ def cli_show(
     limit: str = typer.Option(
         None,
         "--limit",
-        "-L",
+        "-l",
         help="List of hosts to select",
     ),
     structured: bool = typer.Option(
@@ -214,7 +214,7 @@ def cli_fw_show(
     limit: str = typer.Option(
         None,
         "--limit",
-        "-L",
+        "-l",
         help="List of hosts to select",
     ),
     ):
@@ -236,7 +236,7 @@ def cli_fw_download(
     limit: str = typer.Option(
         None,
         "--limit",
-        "-L",
+        "-l",
         help="List of hosts to select",
     ),
     release: str = typer.Option(
@@ -267,6 +267,27 @@ def cli_hosts(
     """Show host inventory"""
     app = ctx.obj['myapp']
     render_output(app.cmd_inventory(), fmt=fmt)
+
+
+@cli_app.command("facts")
+def cli_hosts(
+    ctx: typer.Context,
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.yaml.value,
+        "--format",
+        "-F",
+        help="Output format",
+    ),
+    limit: str = typer.Option(
+        None,
+        "--limit",
+        "-l",
+        help="List of hosts to select",
+    ),
+    ):
+    """Show hosts OS/Device facts"""
+    app = ctx.obj['myapp']
+    render_output(app.cmd_facts(limit=limit), fmt=fmt)
 
 
 
